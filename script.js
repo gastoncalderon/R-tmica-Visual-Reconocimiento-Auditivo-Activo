@@ -90,7 +90,7 @@ let audioCtx = null;
 let currentBpm = 75;
 let stats = { total: 0, correct: 0 };
 let selectedTokenId = null;
-let animationFrameId = null; // Control del bucle visual de alta precisión
+let animationFrameId = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     initAudio();
@@ -152,13 +152,6 @@ function advanceStage() {
     } else {
         showResults();
     }
-}
-
-// -------------------------------------------------------------
-// TUTORIALES INTERACTIVOS
-// -------------------------------------------------------------
-function encodeSvg(svgString) {
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
 }
 
 function createSafeImage(figKey, altText) {
@@ -317,9 +310,6 @@ function setupTutorialChallenge(allowedFigs, container) {
     document.getElementById('tutorial-interactive-area').classList.remove('hidden');
 }
 
-// -------------------------------------------------------------
-// EJERCICIOS Y SÍNTESIS DE AUDIO CON SINCRONIZACIÓN R.A.F.
-// -------------------------------------------------------------
 function loadNewExercise() {
     const stage = STAGES[currentStageIndex];
     userAnswers = [null, null, null, null];
@@ -490,7 +480,6 @@ function playPatternOnly(bpm) {
 }
 
 function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComplete) {
-    // 1. Programar todos los eventos de audio con precisión absoluta de hardware
     pattern.forEach((figKey, pulseIdx) => {
         const pulseStart = startTime + (pulseIdx * beatInterval);
 
@@ -509,7 +498,6 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
         }
     });
 
-    // 2. Sincronización visual de alta precisión usando requestAnimationFrame
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     let highlighted = new Array(pattern.length).fill(false);
 
@@ -519,7 +507,6 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
 
         pattern.forEach((_, pulseIdx) => {
             const pulseStart = startTime + (pulseIdx * beatInterval);
-            // Iluminación instantánea y exacta cuando el reloj de audio alcanza el pulso
             if (!highlighted[pulseIdx] && now >= pulseStart) {
                 highlighted[pulseIdx] = true;
                 highlightPulseSlot(pulseIdx);

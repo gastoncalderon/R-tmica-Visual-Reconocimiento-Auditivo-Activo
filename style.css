@@ -350,3 +350,34 @@ header h1 {
 }
 .speed-challenge-box h3 { color: #b7950b; margin-bottom: 5px; }
 .speed-challenge-box p { font-size: 0.9rem; margin-bottom: 10px; }
+
+/* ========================================================= */
+/* CORRECCIÓN RESPONSIVE: 4 RECTÁNGULOS EN UNA SOLA LÍNEA      */
+/* ========================================================= */
+@media (max-width: 600px) {
+  #app {
+    padding: 12px 6px; /* Reduce márgenes laterales de la app */
+  }
+
+  #slots-container {
+    gap: 5px; /* Reduce el espacio entre los 4 slots */
+    flex-wrap: nowrap; /* Fuerza a que no salten de línea */
+    width: 100%;
+  }
+
+  .slot-dropzone {
+    width: 21vw; /* Ancho fluido adaptado a celulares */
+    max-width: 72px;
+    height: 90px;
+    border-width: 2px;
+  }
+
+  .slot-dropzone img {
+    max-width: 42px;
+    max-height: 52px;
+  }
+
+  .slot-number {
+    font-size: 0.68rem; /* Texto más compacto */
+  }
+}
