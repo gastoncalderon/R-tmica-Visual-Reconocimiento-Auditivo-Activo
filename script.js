@@ -1,12 +1,6 @@
 /**
- * Rítmica Visual - Laboratorio de Ritmo
- * Corrección de carga segura de imágenes mediante DOM y addEventListener('error'),
- * eliminando por completo atributos inline y conflictos de comillas en SVGs de respaldo.
+ * Rítmica Visual - Laboratorio de Ritmo (Versión optimizada con sincronización r.a.f.)
  */
-
-function encodeSvg(svgString) {
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
-}
 
 const FIGURES = {
     pan: {
@@ -15,12 +9,7 @@ const FIGURES = {
         syllables: 1,
         soundLabel: '(1 sonido)',
         image: 'assets/pan.png',
-        fallback: encodeSvg(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                <path d="M10,50 Q10,30 50,25 Q90,30 90,50 Q90,75 50,80 Q10,75 10,50 Z" fill="#d35400"/>
-                <path d="M25,42 Q35,50 25,58 M50,38 Q60,50 50,62 M75,42 Q85,50 75,58" stroke="#f39c12" stroke-width="4" fill="none" stroke-linecap="round"/>
-            </svg>
-        `)
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M10,50 Q10,30 50,25 Q90,30 90,50 Q90,75 50,80 Q10,75 10,50 Z" fill="%23d35400"/></svg>'
     },
     queso: {
         id: 'queso',
@@ -28,14 +17,7 @@ const FIGURES = {
         syllables: 2,
         soundLabel: '(2 sonidos)',
         image: 'assets/queso.png',
-        fallback: encodeSvg(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                <polygon points="10,80 90,80 50,20" fill="#f1c40f"/>
-                <circle cx="45" cy="58" r="7" fill="#d4ac0d"/>
-                <circle cx="65" cy="68" r="5" fill="#d4ac0d"/>
-                <circle cx="35" cy="70" r="4" fill="#d4ac0d"/>
-            </svg>
-        `)
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="10,80 90,80 50,20" fill="%23f1c40f"/></svg>'
     },
     silencio: {
         id: 'silencio',
@@ -43,12 +25,7 @@ const FIGURES = {
         syllables: 0,
         soundLabel: '(0 sonidos)',
         image: 'assets/silencio.png',
-        fallback: encodeSvg(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="#e2e8f0"/>
-                <text x="50" y="64" font-size="44" text-anchor="middle" fill="#2c3e50">🤫</text>
-            </svg>
-        `)
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23e2e8f0"/><text x="50" y="62" font-size="42" text-anchor="middle" fill="%232c3e50">🤫</text></svg>'
     },
     mariposa: {
         id: 'mariposa',
@@ -56,36 +33,9 @@ const FIGURES = {
         syllables: 4,
         soundLabel: '(4 sonidos)',
         image: 'assets/mariposa.png',
-        fallback: encodeSvg(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                <ellipse cx="32" cy="38" rx="20" ry="16" fill="#e67e22"/>
-                <ellipse cx="68" cy="38" rx="20" ry="16" fill="#e67e22"/>
-                <ellipse cx="35" cy="64" rx="16" ry="14" fill="#f39c12"/>
-                <ellipse cx="65" cy="64" rx="16" ry="14" fill="#f39c12"/>
-                <rect x="46" y="25" width="8" height="52" rx="4" fill="#2c3e50"/>
-            </svg>
-        `)
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="40" ry="30" fill="%23e67e22"/></svg>'
     }
 };
-
-/**
- * Crea un elemento <img> seguro con manejo de error mediante addEventListener,
- * evitando cualquier inyección de HTML inline.
- */
-function createSafeImage(figKey, altText) {
-    const fig = FIGURES[figKey];
-    const img = document.createElement('img');
-    img.alt = altText || fig.name;
-
-    img.addEventListener('error', () => {
-        if (img.src !== fig.fallback) {
-            img.src = fig.fallback;
-        }
-    }, { once: true });
-
-    img.src = fig.image;
-    return img;
-}
 
 const STAGES = [
     {
@@ -140,6 +90,7 @@ let audioCtx = null;
 let currentBpm = 75;
 let stats = { total: 0, correct: 0 };
 let selectedTokenId = null;
+let animationFrameId = null; // Control del bucle visual de alta precisión
 
 window.addEventListener('DOMContentLoaded', () => {
     initAudio();
@@ -172,6 +123,8 @@ function loadStage() {
     document.getElementById('stage-title').textContent = stage.title;
     updateProgressBar();
 
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
     document.getElementById('main-content').classList.add('hidden');
     document.getElementById('audio-control-panel').classList.add('hidden');
     document.getElementById('exercise-section').classList.add('hidden');
@@ -202,8 +155,23 @@ function advanceStage() {
 }
 
 // -------------------------------------------------------------
-// TUTORIALES INTERACTIVOS (Construcción DOM segura)
+// TUTORIALES INTERACTIVOS
 // -------------------------------------------------------------
+function encodeSvg(svgString) {
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
+}
+
+function createSafeImage(figKey, altText) {
+    const fig = FIGURES[figKey];
+    const img = document.createElement('img');
+    img.alt = altText || fig.name;
+    img.addEventListener('error', () => {
+        if (img.src !== fig.fallback) img.src = fig.fallback;
+    }, { once: true });
+    img.src = fig.image;
+    return img;
+}
+
 function createTutorialCard(figKey) {
     const fig = FIGURES[figKey];
     const card = document.createElement('div');
@@ -211,7 +179,6 @@ function createTutorialCard(figKey) {
     card.dataset.fig = figKey;
 
     const img = createSafeImage(figKey, fig.name);
-
     const title = document.createElement('strong');
     title.textContent = fig.name;
 
@@ -295,7 +262,6 @@ function createRhythmTokenElement(figKey, draggable = false) {
     token.draggable = draggable;
 
     const img = createSafeImage(figKey, fig.name);
-
     const label = document.createElement('span');
     label.className = 'token-label';
     label.textContent = fig.name;
@@ -352,7 +318,7 @@ function setupTutorialChallenge(allowedFigs, container) {
 }
 
 // -------------------------------------------------------------
-// EJERCICIOS Y SÍNTESIS DE AUDIO
+// EJERCICIOS Y SÍNTESIS DE AUDIO CON SINCRONIZACIÓN R.A.F.
 // -------------------------------------------------------------
 function loadNewExercise() {
     const stage = STAGES[currentStageIndex];
@@ -524,12 +490,9 @@ function playPatternOnly(bpm) {
 }
 
 function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComplete) {
+    // 1. Programar todos los eventos de audio con precisión absoluta de hardware
     pattern.forEach((figKey, pulseIdx) => {
         const pulseStart = startTime + (pulseIdx * beatInterval);
-
-        setTimeout(() => {
-            highlightPulseSlot(pulseIdx);
-        }, Math.max(0, (pulseStart - audioCtx.currentTime) * 1000));
 
         if (figKey === 'pan') {
             playWoodblockAttack(pulseStart);
@@ -545,6 +508,31 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
             // Silencio total
         }
     });
+
+    // 2. Sincronización visual de alta precisión usando requestAnimationFrame
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    let highlighted = new Array(pattern.length).fill(false);
+
+    function updateVisuals() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+
+        pattern.forEach((_, pulseIdx) => {
+            const pulseStart = startTime + (pulseIdx * beatInterval);
+            // Iluminación instantánea y exacta cuando el reloj de audio alcanza el pulso
+            if (!highlighted[pulseIdx] && now >= pulseStart) {
+                highlighted[pulseIdx] = true;
+                highlightPulseSlot(pulseIdx);
+            }
+        });
+
+        const totalDuration = pattern.length * beatInterval;
+        if (now < startTime + totalDuration + 0.1) {
+            animationFrameId = requestAnimationFrame(updateVisuals);
+        }
+    }
+
+    animationFrameId = requestAnimationFrame(updateVisuals);
 
     if (onComplete) {
         const totalDuration = (pattern.length * beatInterval * 1000);
@@ -607,6 +595,7 @@ function nextExercise() {
 }
 
 function showResults() {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
     document.getElementById('audio-control-panel').classList.add('hidden');
     document.getElementById('exercise-section').classList.add('hidden');
     document.getElementById('main-content').classList.add('hidden');
@@ -631,6 +620,7 @@ function startSpeedChallenge(customBpm) {
 }
 
 function restartApp() {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
     currentStageIndex = 0;
     currentBpm = 75;
     document.getElementById('tempo-label').textContent = currentBpm;
