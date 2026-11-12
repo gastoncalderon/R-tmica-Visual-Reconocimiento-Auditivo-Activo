@@ -1,9 +1,9 @@
 /**
- * Laboratorio de Ritmo Musical - Versión 2 con Web Audio API avanzada,
- * assets locales estables, tempo fijo a 75 BPM, tutoriales interactivos y desafío de velocidad.
+ * Rítmica Visual - Laboratorio de Ritmo (Versión 3)
+ * Corrección de renderizado de imágenes (assets locales con respaldo SVG seguro)
+ * y tutoriales interactivos donde se puede hacer clic directamente en cada figura para escuchar su sonido.
  */
 
-// Rutas locales de los assets gráficos solicitados
 const FIGURES = {
     pan: {
         id: 'pan',
@@ -39,7 +39,6 @@ const FIGURES = {
     }
 };
 
-// Estructura de las 6 etapas obligatorias + Resultados
 const STAGES = [
     {
         id: 1,
@@ -85,16 +84,14 @@ const STAGES = [
     }
 ];
 
-// Estado global
 let currentStageIndex = 0;
 let currentExerciseIndex = 0;
 let currentPattern = [];
 let userAnswers = [null, null, null, null];
 let audioCtx = null;
-let fixedBpm = 75; // Tempo fijo estricto de 75 BPM para etapas normales
+let fixedBpm = 75;
 let stats = { total: 0, correct: 0 };
 let selectedTokenId = null;
-let tutorialPassed = false;
 
 window.addEventListener('DOMContentLoaded', () => {
     initAudio();
@@ -115,16 +112,13 @@ function setupEventListeners() {
     document.getElementById('btn-next-tutorial').addEventListener('click', advanceStage);
     document.getElementById('btn-restart').addEventListener('click', restartApp);
 
-    // Botones del Desafío de Velocidad
     document.querySelectorAll('.speed-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const bpmVal = parseInt(e.target.dataset.bpm);
-            startSpeedChallenge(bpmVal);
+            startSpeedChallenge(parseInt(e.target.dataset.bpm));
         });
     });
 }
 
-// Carga de Etapas
 function loadStage() {
     const stage = STAGES[currentStageIndex];
     document.getElementById('stage-title').textContent = stage.title;
@@ -159,77 +153,125 @@ function advanceStage() {
     }
 }
 
-// Tutoriales Interactivos Audiovisuales con Microactividad
+// -------------------------------------------------------------
+// TUTORIALES INTERACTIVOS (Clic en cada figura para escuchar)
+// -------------------------------------------------------------
 function loadInteractiveTutorial(stage) {
     const mainContent = document.getElementById('main-content');
     mainContent.classList.remove('hidden');
-    tutorialPassed = false;
     document.getElementById('btn-next-tutorial').classList.add('hidden');
     document.getElementById('tutorial-feedback').classList.add('hidden');
 
     const tutorialContent = document.getElementById('tutorial-content');
     const interactiveArea = document.getElementById('tutorial-interactive-area');
-    interactiveArea.classList.remove('hidden');
+    interactiveArea.classList.add('hidden');
     const optionsContainer = document.getElementById('tutorial-options');
     optionsContainer.innerHTML = '';
 
     if (stage.interactiveType === 'pan-queso') {
         tutorialContent.innerHTML = `
             <h3>Descubriendo el PAN y el QUESO</h3>
-            <p>El <strong>PAN</strong> suena una vez por pulso (negra). El <strong>QUESO</strong> (ti-ti) suena dos veces dividiendo el pulso en dos partes iguales.</p>
-            <div class="tutorial-card-grid">
-                <div class="tutorial-item"><img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallbackImage}'"><strong>PAN</strong></div>
-                <div class="tutorial-item"><img src="${FIGURES.queso.image}" onerror="this.src='${FIGURES.queso.fallbackImage}'"><strong>QUESO</strong></div>
+            <p><strong>¡Hacé clic o tocá cada figura para escuchar cómo suena!</strong></p>
+            <div class="tutorial-card-grid" id="tut-cards-container">
+                <div class="tutorial-item" data-fig="pan">
+                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallbackImage}'">
+                    <strong>PAN</strong>
+                    <span style="font-size:0.75rem; color:#666;">(1 sonido)</span>
+                </div>
+                <div class="tutorial-item" data-fig="queso">
+                    <img src="${FIGURES.queso.image}" onerror="this.src='${FIGURES.queso.fallbackImage}'">
+                    <strong>QUESO</strong>
+                    <span style="font-size:0.75rem; color:#666;">(2 sonidos)</span>
+                </div>
             </div>
         `;
-        
-        // Microactividad: Identificar sonido aleatorio entre Pan y Queso
+        setupTutorialClickToListen(['pan', 'queso']);
         setupTutorialChallenge(['pan', 'queso'], optionsContainer);
 
     } else if (stage.interactiveType === 'silencio') {
         tutorialContent.innerHTML = `
-            <h3>El Pulso Avanza con el SILENCIO 🤫</h3>
-            <p>El pulso continúa constante, pero en el silencio <strong>no hay ataque sonoro</strong>. Su duración es exactamente igual a la de un PAN.</p>
-            <div class="tutorial-card-grid">
-                <div class="tutorial-item"><img src="${FIGURES.silencio.image}" onerror="this.src='${FIGURES.silencio.fallbackImage}'"><strong>SILENCIO</strong></div>
+            <h3>El Pulso con el SILENCIO 🤫</h3>
+            <p><strong>Tocá cada tarjeta para escuchar la diferencia entre el sonido y la ausencia de él:</strong></p>
+            <div class="tutorial-card-grid" id="tut-cards-container">
+                <div class="tutorial-item" data-fig="pan">
+                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallbackImage}'">
+                    <strong>PAN</strong>
+                    <span style="font-size:0.75rem; color:#666;">(Sonido)</span>
+                </div>
+                <div class="tutorial-item" data-fig="silencio">
+                    <img src="${FIGURES.silencio.image}" onerror="this.src='${FIGURES.silencio.fallbackImage}'">
+                    <strong>SILENCIO</strong>
+                    <span style="font-size:0.75rem; color:#666;">(Sin sonido)</span>
+                </div>
             </div>
         `;
+        setupTutorialClickToListen(['pan', 'silencio']);
         setupTutorialChallenge(['pan', 'silencio'], optionsContainer);
 
     } else if (stage.interactiveType === 'mariposa') {
         tutorialContent.innerHTML = `
             <h3>La Mariposa 🦋 (Semicorcheas)</h3>
-            <p>La mariposa divide el pulso en <strong>cuatro partes iguales</strong> (ti-ri-ti-ri).</p>
-            <div class="tutorial-card-grid">
-                <div class="tutorial-item"><img src="${FIGURES.mariposa.image}" onerror="this.src='${FIGURES.mariposa.fallbackImage}'"><strong>MARIPOSA</strong></div>
+            <p><strong>Tocá las tarjetas para comparar las velocidades de las figuras:</strong></p>
+            <div class="tutorial-card-grid" id="tut-cards-container">
+                <div class="tutorial-item" data-fig="pan">
+                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallbackImage}'">
+                    <strong>PAN</strong>
+                </div>
+                <div class="tutorial-item" data-fig="queso">
+                    <img src="${FIGURES.queso.image}" onerror="this.src='${FIGURES.queso.fallbackImage}'">
+                    <strong>QUESO</strong>
+                </div>
+                <div class="tutorial-item" data-fig="mariposa">
+                    <img src="${FIGURES.mariposa.image}" onerror="this.src='${FIGURES.mariposa.fallbackImage}'">
+                    <strong>MARIPOSA</strong>
+                </div>
             </div>
         `;
-        setupTutorialChallenge(['pan', 'queso', 'silencio', 'mariposa'], optionsContainer);
+        setupTutorialClickToListen(['pan', 'queso', 'mariposa']);
+        setupTutorialChallenge(['queso', 'mariposa'], optionsContainer);
     }
+}
+
+// Permite hacer clic en cada figura del tutorial para escuchar su sonido individual
+function setupTutorialClickToListen(figKeys) {
+    setTimeout(() => {
+        figKeys.forEach(figKey => {
+            const card = document.querySelector(`.tutorial-item[data-fig="${figKey}"]`);
+            if (card) {
+                card.addEventListener('click', () => {
+                    playSingleFigureAudio(figKey, fixedBpm);
+                });
+            }
+        });
+    }, 100);
 }
 
 function setupTutorialChallenge(allowedFigs, container) {
     let targetFig = allowedFigs[Math.floor(Math.random() * allowedFigs.length)];
 
+    const challengeBox = document.createElement('div');
+    challengeBox.style.marginTop = "15px";
+    challengeBox.innerHTML = `
+        <p id="tut-quest-label" style="font-weight:bold; margin-bottom:8px;">Desafío: ¿Cuál de estas figuras produce el sonido que escucharás?</p>
+    `;
+
     const listenBtn = document.createElement('button');
     listenBtn.className = 'btn primary';
-    listenBtn.textContent = '🔊 Escuchar Ejemplo del Tutor';
-    listenBtn.style.margin = '10px auto';
+    listenBtn.textContent = '🔊 Reproducir Sonido Misterioso';
+    listenBtn.style.marginBottom = '10px';
     listenBtn.addEventListener('click', () => {
         playSingleFigureAudio(targetFig, fixedBpm);
     });
-
-    container.appendChild(listenBtn);
+    challengeBox.appendChild(listenBtn);
 
     const figsRow = document.createElement('div');
     figsRow.className = 'tokens-flex';
-    figsRow.style.marginTop = '10px';
 
     allowedFigs.forEach(figKey => {
         const fig = FIGURES[figKey];
         const token = document.createElement('div');
         token.className = 'rhythm-token';
-        token.innerHTML = `<img src="${fig.image}" onerror="this.src='${fig.fallbackImage}'"><span class="token-label">${fig.name}</span>`;
+        token.innerHTML = `<img src="${fig.image}" onerror="this.src='${fig.fallbackImage}'" alt="${fig.name}"><span class="token-label">${fig.name}</span>`;
         token.style.cursor = 'pointer';
 
         token.addEventListener('click', () => {
@@ -238,19 +280,23 @@ function setupTutorialChallenge(allowedFigs, container) {
             if (figKey === targetFig) {
                 feedbackBox.textContent = '¡Correcto! Reconociste el sonido perfectamente 🌟';
                 feedbackBox.className = 'feedback-box correct';
-                tutorialPassed = true;
                 document.getElementById('btn-next-tutorial').classList.remove('hidden');
             } else {
-                feedbackBox.textContent = 'Ese no era. Volvé a escuchar el ejemplo atentamente.';
+                feedbackBox.textContent = 'Ese no era. Volvé a escuchar el sonido misterioso.';
                 feedbackBox.className = 'feedback-box incorrect';
             }
         });
         figsRow.appendChild(token);
     });
-    container.appendChild(figsRow);
+
+    challengeBox.appendChild(figsRow);
+    container.appendChild(challengeBox);
+    document.getElementById('tutorial-interactive-area').classList.remove('hidden');
 }
 
-// Generación de Ejercicios de Reconocimiento
+// -------------------------------------------------------------
+// EJERCICIOS DE RECONOCIMIENTO Y SÍNTESIS DE AUDIO
+// -------------------------------------------------------------
 function loadNewExercise() {
     const stage = STAGES[currentStageIndex];
     userAnswers = [null, null, null, null];
@@ -342,7 +388,6 @@ function checkCompletionStatus() {
     document.getElementById('btn-check').disabled = !isComplete;
 }
 
-// Síntesis Web Audio API diferenciada (Cuenta previa vs Patrones rítmicos)
 function playSinusoidalBeep(time, isAccent = false) {
     if (!audioCtx) initAudio();
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -385,6 +430,7 @@ function playWoodblockAttack(time) {
 }
 
 function playSingleFigureAudio(figKey, bpm) {
+    if (!audioCtx) initAudio();
     const now = audioCtx.currentTime + 0.05;
     const beatInterval = 60 / bpm;
     playRhythmPatternForSequence([figKey], now, beatInterval, null);
@@ -395,14 +441,12 @@ function playCountAndPattern(bpm) {
     const now = audioCtx.currentTime + 0.05;
     const beatInterval = 60 / bpm;
 
-    // 1. Cuenta previa con tonos sinusoidales
     for (let i = 0; i < 4; i++) {
         const beatTime = now + (i * beatInterval);
         playSinusoidalBeep(beatTime, i === 0);
         setTimeout(() => highlightCountBox(i + 1, bpm), (beatTime - now) * 1000);
     }
 
-    // 2. Patrón rítmico con sonido percusivo de madera
     const patternStartTime = now + (4 * beatInterval);
     playRhythmPatternForSequence(currentPattern, patternStartTime, beatInterval, () => {
         document.getElementById('btn-replay').disabled = false;
@@ -420,7 +464,6 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
     pattern.forEach((figKey, pulseIdx) => {
         const pulseStart = startTime + (pulseIdx * beatInterval);
         
-        // Animación visual del pulso en los slots si estamos en ejercicio
         setTimeout(() => {
             highlightPulseSlot(pulseIdx);
         }, (pulseStart - audioCtx.currentTime) * 1000);
@@ -436,7 +479,7 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
                 playWoodblockAttack(pulseStart + (s * sub));
             }
         } else if (figKey === 'silencio') {
-            // Silencio total: sin ataques
+            // Silencio total
         }
     });
 
@@ -465,12 +508,11 @@ function highlightPulseSlot(idx) {
     }
 }
 
-// Validación de Ejercicios
 function checkAnswers() {
     stats.total++;
     let isCorrect = true;
     for (let i = 0; i < 4; i++) {
-        if (userAnswers[i] !== currentPattern[i]) { isCorrect = false; break; }
+        if (userAnswers[i] !== currentPattern[i].id) { isCorrect = false; break; }
     }
 
     const feedback = document.getElementById('feedback-message');
@@ -498,7 +540,6 @@ function nextExercise() {
     }
 }
 
-// Pantalla de Resultados y Desafío de Velocidad
 function showResults() {
     document.getElementById('audio-control-panel').classList.add('hidden');
     document.getElementById('exercise-section').classList.add('hidden');
@@ -512,13 +553,11 @@ function showResults() {
 }
 
 function startSpeedChallenge(customBpm) {
-    // Iniciar desafío de velocidad con patrón aleatorio avanzado
     document.getElementById('results-section').classList.add('hidden');
     document.getElementById('audio-control-panel').classList.remove('hidden');
     document.getElementById('exercise-section').classList.remove('hidden');
     document.getElementById('stage-title').textContent = `🚀 Desafío de Velocidad (${customBpm} BPM)`;
 
-    // Sobrecargar momentáneamente el tempo para este desafío
     fixedBpm = customBpm;
     loadNewExercise();
 }

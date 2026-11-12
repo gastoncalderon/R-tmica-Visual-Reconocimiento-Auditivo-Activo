@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rítmica Visual - Laboratorio de Ritmo (Versión 2)</title>
+    <title>Rítmica Visual - Laboratorio de Ritmo (Versión 3)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,8 +19,8 @@
             </div>
         </header>
 
-        <!-- Contenedor Principal de Tutoriales y Explicaciones -->
-        <main id="main-content" class="hidden">
+        <!-- Pantalla de Tutoriales Interactivos (¡Ahora permiten tocar cada figura para escucharla!) -->
+        <section id="main-content" class="hidden">
             <div id="tutorial-content"></div>
             <div id="tutorial-interactive-area" class="hidden">
                 <p id="tutorial-prompt">Escuchá el ejemplo y seleccioná la figura correcta:</p>
@@ -28,7 +28,7 @@
                 <div id="tutorial-feedback" class="feedback-box hidden"></div>
             </div>
             <button id="btn-next-tutorial" class="btn primary hidden">Continuar ➡️</button>
-        </main>
+        </section>
 
         <!-- Panel de Control de Audio (Tempo fijo a 75 BPM) -->
         <section id="audio-control-panel" class="hidden">
@@ -53,7 +53,7 @@
                 <p id="exercise-instruction">Completá los 4 pulsos del patrón escuchado arrastrando o tocando las figuras:</p>
             </div>
 
-            <!-- Slots de Pulsos (Destino) con indicador de iluminación de pulso -->
+            <!-- Slots de Pulsos (Destino) -->
             <div id="slots-container">
                 <div class="pulse-slot" data-index="0">
                     <div class="slot-number">Pulso 1</div>
