@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rítmica Visual - Laboratorio de Ritmo (Versión 3)</title>
+    <title>Laboratorio de Ritmo Musical</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
             </div>
         </header>
 
-        <!-- Pantalla de Tutoriales Interactivos (¡Ahora permiten tocar cada figura para escucharla!) -->
+        <!-- Pantalla de Tutoriales Interactivos -->
         <section id="main-content" class="hidden">
             <div id="tutorial-content"></div>
             <div id="tutorial-interactive-area" class="hidden">
@@ -30,10 +30,10 @@
             <button id="btn-next-tutorial" class="btn primary hidden">Continuar ➡️</button>
         </section>
 
-        <!-- Panel de Control de Audio (Tempo fijo a 75 BPM) -->
+        <!-- Panel de Control de Audio -->
         <section id="audio-control-panel" class="hidden">
             <div class="tempo-fixed-info">
-                <span>Tempo pedagógico: <strong>75 BPM</strong></span>
+                <span>Tempo activo: <strong id="tempo-label">75</strong> BPM</span>
             </div>
             <div class="action-buttons">
                 <button id="btn-play-count" class="btn primary">🔊 Escuchar Cuenta Previa y Patrón</button>

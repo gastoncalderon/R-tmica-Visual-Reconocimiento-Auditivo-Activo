@@ -1,7 +1,5 @@
 /**
- * Rítmica Visual - Laboratorio de Ritmo (Versión 3)
- * Corrección de renderizado de imágenes (assets locales con respaldo SVG seguro)
- * y tutoriales interactivos donde se puede hacer clic directamente en cada figura para escuchar su sonido.
+ * Rítmica Visual - Laboratorio de Ritmo (Versión Definitiva corregida)
  */
 
 const FIGURES = {
@@ -10,32 +8,28 @@ const FIGURES = {
         name: 'PAN',
         syllables: 1,
         image: 'assets/pan.png',
-        fallbackImage: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M10,50 Q10,30 50,25 Q90,30 90,50 Q90,75 50,80 Q10,75 10,50 Z" fill="%23d35400"/><path d="M20,45 Q50,35 80,45" stroke="%23b9770e" stroke-width="4" fill="none"/></svg>',
-        desc: 'Una sílaba, un sonido (Negra).'
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M10,50 Q10,30 50,25 Q90,30 90,50 Q90,75 50,80 Q10,75 10,50 Z" fill="%23d35400"/></svg>'
     },
     queso: {
         id: 'queso',
         name: 'QUESO',
         syllables: 2,
         image: 'assets/queso.png',
-        fallbackImage: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="10,80 90,80 50,20" fill="%23f1c40f"/><circle cx="45" cy="55" r="6" fill="%23d4ac0d"/><circle cx="65" cy="65" r="5" fill="%23d4ac0d"/><circle cx="35" cy="70" r="4" fill="%23d4ac0d"/></svg>',
-        desc: 'Dos sílabas, dos sonidos (Corcheas).'
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="10,80 90,80 50,20" fill="%23f1c40f"/></svg>'
     },
     silencio: {
         id: 'silencio',
         name: 'SILENCIO',
         syllables: 0,
         image: 'assets/silencio.png',
-        fallbackImage: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23e2e8f0"/><text x="50" y="62" font-size="42" text-anchor="middle" fill="%232c3e50">🤫</text></svg>',
-        desc: 'Un pulso completo sin sonido (Silencio de negra).'
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23e2e8f0"/><text x="50" y="62" font-size="42" text-anchor="middle" fill="%232c3e50">🤫</text></svg>'
     },
     mariposa: {
         id: 'mariposa',
         name: 'MARIPOSA',
         syllables: 4,
         image: 'assets/mariposa.png',
-        fallbackImage: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,30 Q30,10 15,30 Q5,50 30,70 Q50,90 50,90 Q50,90 70,70 Q95,50 85,30 Q70,10 50,30 Z" fill="%23e67e22"/><line x1="50" y1="20" x2="50" y2="85" stroke="%232c3e50" stroke-width="4"/></svg>',
-        desc: 'Cuatro sílabas, cuatro sonidos (Semicorcheas).'
+        fallback: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="40" ry="30" fill="%23e67e22"/></svg>'
     }
 };
 
@@ -89,7 +83,7 @@ let currentExerciseIndex = 0;
 let currentPattern = [];
 let userAnswers = [null, null, null, null];
 let audioCtx = null;
-let fixedBpm = 75;
+let currentBpm = 75; // Variable única unificada de tempo para evitar fallos en el desafío
 let stats = { total: 0, correct: 0 };
 let selectedTokenId = null;
 
@@ -105,8 +99,8 @@ function initAudio() {
 }
 
 function setupEventListeners() {
-    document.getElementById('btn-play-count').addEventListener('click', () => playCountAndPattern(fixedBpm));
-    document.getElementById('btn-replay').addEventListener('click', () => playPatternOnly(fixedBpm));
+    document.getElementById('btn-play-count').addEventListener('click', () => playCountAndPattern(currentBpm));
+    document.getElementById('btn-replay').addEventListener('click', () => playPatternOnly(currentBpm));
     document.getElementById('btn-check').addEventListener('click', checkAnswers);
     document.getElementById('btn-next-exercise').addEventListener('click', nextExercise);
     document.getElementById('btn-next-tutorial').addEventListener('click', advanceStage);
@@ -154,7 +148,7 @@ function advanceStage() {
 }
 
 // -------------------------------------------------------------
-// TUTORIALES INTERACTIVOS (Clic en cada figura para escuchar)
+// TUTORIALES INTERACTIVOS LIMPIOS
 // -------------------------------------------------------------
 function loadInteractiveTutorial(stage) {
     const mainContent = document.getElementById('main-content');
@@ -172,14 +166,14 @@ function loadInteractiveTutorial(stage) {
         tutorialContent.innerHTML = `
             <h3>Descubriendo el PAN y el QUESO</h3>
             <p><strong>¡Hacé clic o tocá cada figura para escuchar cómo suena!</strong></p>
-            <div class="tutorial-card-grid" id="tut-cards-container">
+            <div class="tutorial-card-grid">
                 <div class="tutorial-item" data-fig="pan">
-                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallbackImage}'">
+                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallback}'">
                     <strong>PAN</strong>
                     <span style="font-size:0.75rem; color:#666;">(1 sonido)</span>
                 </div>
                 <div class="tutorial-item" data-fig="queso">
-                    <img src="${FIGURES.queso.image}" onerror="this.src='${FIGURES.queso.fallbackImage}'">
+                    <img src="${FIGURES.queso.image}" onerror="this.src='${FIGURES.queso.fallback}'">
                     <strong>QUESO</strong>
                     <span style="font-size:0.75rem; color:#666;">(2 sonidos)</span>
                 </div>
@@ -191,15 +185,15 @@ function loadInteractiveTutorial(stage) {
     } else if (stage.interactiveType === 'silencio') {
         tutorialContent.innerHTML = `
             <h3>El Pulso con el SILENCIO 🤫</h3>
-            <p><strong>Tocá cada tarjeta para escuchar la diferencia entre el sonido y la ausencia de él:</strong></p>
-            <div class="tutorial-card-grid" id="tut-cards-container">
+            <p><strong>Tocá cada tarjeta para escuchar la diferencia:</strong></p>
+            <div class="tutorial-card-grid">
                 <div class="tutorial-item" data-fig="pan">
-                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallbackImage}'">
+                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallback}'">
                     <strong>PAN</strong>
                     <span style="font-size:0.75rem; color:#666;">(Sonido)</span>
                 </div>
                 <div class="tutorial-item" data-fig="silencio">
-                    <img src="${FIGURES.silencio.image}" onerror="this.src='${FIGURES.silencio.fallbackImage}'">
+                    <img src="${FIGURES.silencio.image}" onerror="this.src='${FIGURES.silencio.fallback}'">
                     <strong>SILENCIO</strong>
                     <span style="font-size:0.75rem; color:#666;">(Sin sonido)</span>
                 </div>
@@ -211,18 +205,18 @@ function loadInteractiveTutorial(stage) {
     } else if (stage.interactiveType === 'mariposa') {
         tutorialContent.innerHTML = `
             <h3>La Mariposa 🦋 (Semicorcheas)</h3>
-            <p><strong>Tocá las tarjetas para comparar las velocidades de las figuras:</strong></p>
-            <div class="tutorial-card-grid" id="tut-cards-container">
+            <p><strong>Tocá las tarjetas para comparar velocidades:</strong></p>
+            <div class="tutorial-card-grid">
                 <div class="tutorial-item" data-fig="pan">
-                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallbackImage}'">
+                    <img src="${FIGURES.pan.image}" onerror="this.src='${FIGURES.pan.fallback}'">
                     <strong>PAN</strong>
                 </div>
                 <div class="tutorial-item" data-fig="queso">
-                    <img src="${FIGURES.queso.image}" onerror="this.src='${FIGURES.queso.fallbackImage}'">
+                    <img src="${FIGURES.queso.image}" onerror="this.src='${FIGURES.queso.fallback}'">
                     <strong>QUESO</strong>
                 </div>
                 <div class="tutorial-item" data-fig="mariposa">
-                    <img src="${FIGURES.mariposa.image}" onerror="this.src='${FIGURES.mariposa.fallbackImage}'">
+                    <img src="${FIGURES.mariposa.image}" onerror="this.src='${FIGURES.mariposa.fallback}'">
                     <strong>MARIPOSA</strong>
                 </div>
             </div>
@@ -232,18 +226,15 @@ function loadInteractiveTutorial(stage) {
     }
 }
 
-// Permite hacer clic en cada figura del tutorial para escuchar su sonido individual
 function setupTutorialClickToListen(figKeys) {
     setTimeout(() => {
         figKeys.forEach(figKey => {
             const card = document.querySelector(`.tutorial-item[data-fig="${figKey}"]`);
             if (card) {
-                card.addEventListener('click', () => {
-                    playSingleFigureAudio(figKey, fixedBpm);
-                });
+                card.onclick = () => playSingleFigureAudio(figKey, currentBpm);
             }
         });
-    }, 100);
+    }, 50);
 }
 
 function setupTutorialChallenge(allowedFigs, container) {
@@ -252,16 +243,14 @@ function setupTutorialChallenge(allowedFigs, container) {
     const challengeBox = document.createElement('div');
     challengeBox.style.marginTop = "15px";
     challengeBox.innerHTML = `
-        <p id="tut-quest-label" style="font-weight:bold; margin-bottom:8px;">Desafío: ¿Cuál de estas figuras produce el sonido que escucharás?</p>
+        <p style="font-weight:bold; margin-bottom:8px;">Desafío: ¿Cuál de estas figuras produce el sonido que escucharás?</p>
     `;
 
     const listenBtn = document.createElement('button');
     listenBtn.className = 'btn primary';
     listenBtn.textContent = '🔊 Reproducir Sonido Misterioso';
     listenBtn.style.marginBottom = '10px';
-    listenBtn.addEventListener('click', () => {
-        playSingleFigureAudio(targetFig, fixedBpm);
-    });
+    listenBtn.onclick = () => playSingleFigureAudio(targetFig, currentBpm);
     challengeBox.appendChild(listenBtn);
 
     const figsRow = document.createElement('div');
@@ -271,10 +260,10 @@ function setupTutorialChallenge(allowedFigs, container) {
         const fig = FIGURES[figKey];
         const token = document.createElement('div');
         token.className = 'rhythm-token';
-        token.innerHTML = `<img src="${fig.image}" onerror="this.src='${fig.fallbackImage}'" alt="${fig.name}"><span class="token-label">${fig.name}</span>`;
+        token.innerHTML = `<img src="${fig.image}" onerror="this.src='${fig.fallback}'"><span class="token-label">${fig.name}</span>`;
         token.style.cursor = 'pointer';
 
-        token.addEventListener('click', () => {
+        token.onclick = () => {
             const feedbackBox = document.getElementById('tutorial-feedback');
             feedbackBox.classList.remove('hidden');
             if (figKey === targetFig) {
@@ -285,7 +274,7 @@ function setupTutorialChallenge(allowedFigs, container) {
                 feedbackBox.textContent = 'Ese no era. Volvé a escuchar el sonido misterioso.';
                 feedbackBox.className = 'feedback-box incorrect';
             }
-        });
+        };
         figsRow.appendChild(token);
     });
 
@@ -295,7 +284,7 @@ function setupTutorialChallenge(allowedFigs, container) {
 }
 
 // -------------------------------------------------------------
-// EJERCICIOS DE RECONOCIMIENTO Y SÍNTESIS DE AUDIO
+// EJERCICIOS Y SÍNTESIS DE AUDIO ROBUSTA
 // -------------------------------------------------------------
 function loadNewExercise() {
     const stage = STAGES[currentStageIndex];
@@ -324,7 +313,7 @@ function renderTokensBank(allowedFigures) {
         token.className = 'rhythm-token';
         token.draggable = true;
         token.innerHTML = `
-            <img src="${fig.image}" onerror="this.src='${fig.fallbackImage}'" alt="${fig.name}">
+            <img src="${fig.image}" onerror="this.src='${fig.fallback}'">
             <span class="token-label">${fig.name}</span>
         `;
 
@@ -332,11 +321,11 @@ function renderTokensBank(allowedFigures) {
             e.dataTransfer.setData('text/plain', fig.id);
         });
 
-        token.addEventListener('click', () => {
+        token.onclick = () => {
             document.querySelectorAll('.rhythm-token').forEach(t => t.classList.remove('selected-touch'));
             token.classList.add('selected-touch');
             selectedTokenId = fig.id;
-        });
+        };
 
         bank.appendChild(token);
     });
@@ -349,15 +338,15 @@ function setupDropzones() {
     dropzones.forEach(zone => {
         const slotIdx = parseInt(zone.dataset.slot);
 
-        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-        zone.addEventListener('dragleave', () => { zone.classList.remove('drag-over'); });
-        zone.addEventListener('drop', (e) => {
+        zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+        zone.ondragleave = () => { zone.classList.remove('drag-over'); };
+        zone.ondrop = (e) => {
             e.preventDefault();
             zone.classList.remove('drag-over');
             placeTokenInSlot(slotIdx, e.dataTransfer.getData('text/plain'));
-        });
+        };
 
-        zone.addEventListener('click', () => {
+        zone.onclick = () => {
             if (selectedTokenId) {
                 placeTokenInSlot(slotIdx, selectedTokenId);
                 selectedTokenId = null;
@@ -367,7 +356,7 @@ function setupDropzones() {
                 zone.innerHTML = '';
                 checkCompletionStatus();
             }
-        });
+        };
     });
 }
 
@@ -375,7 +364,7 @@ function placeTokenInSlot(slotIdx, figId) {
     userAnswers[slotIdx] = figId;
     const zone = document.querySelector(`.slot-dropzone[data-slot="${slotIdx}"]`);
     const fig = FIGURES[figId];
-    zone.innerHTML = `<img src="${fig.image}" onerror="this.src='${fig.fallbackImage}'" alt="${fig.name}">`;
+    zone.innerHTML = `<img src="${fig.image}" onerror="this.src='${fig.fallback}'">`;
     checkCompletionStatus();
 }
 
@@ -438,6 +427,8 @@ function playSingleFigureAudio(figKey, bpm) {
 
 function playCountAndPattern(bpm) {
     if (!audioCtx) initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
     const now = audioCtx.currentTime + 0.05;
     const beatInterval = 60 / bpm;
 
@@ -455,6 +446,8 @@ function playCountAndPattern(bpm) {
 
 function playPatternOnly(bpm) {
     if (!audioCtx) initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
     const now = audioCtx.currentTime + 0.05;
     const beatInterval = 60 / bpm;
     playRhythmPatternForSequence(currentPattern, now, beatInterval, null);
@@ -466,19 +459,19 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
         
         setTimeout(() => {
             highlightPulseSlot(pulseIdx);
-        }, (pulseStart - audioCtx.currentTime) * 1000);
+        }, Math.max(0, (pulseStart - audioCtx.currentTime) * 1000));
 
-        if (figKey === 'pan') {
+        if (figKey.id === 'pan') {
             playWoodblockAttack(pulseStart);
-        } else if (figKey === 'queso') {
+        } else if (figKey.id === 'queso') {
             playWoodblockAttack(pulseStart);
             playWoodblockAttack(pulseStart + (beatInterval / 2));
-        } else if (figKey === 'mariposa') {
+        } else if (figKey.id === 'mariposa') {
             const sub = beatInterval / 4;
             for (let s = 0; s < 4; s++) {
                 playWoodblockAttack(pulseStart + (s * sub));
             }
-        } else if (figKey === 'silencio') {
+        } else if (figKey.id === 'silencio') {
             // Silencio total
         }
     });
@@ -553,18 +546,21 @@ function showResults() {
 }
 
 function startSpeedChallenge(customBpm) {
+    currentBpm = customBpm; // Unificamos el tempo global
+    document.getElementById('tempo-label').textContent = currentBpm;
     document.getElementById('results-section').classList.add('hidden');
     document.getElementById('audio-control-panel').classList.remove('hidden');
     document.getElementById('exercise-section').classList.remove('hidden');
-    document.getElementById('stage-title').textContent = `🚀 Desafío de Velocidad (${customBpm} BPM)`;
+    document.getElementById('stage-title').textContent = `🚀 Desafío de Velocidad (${currentBpm} BPM)`;
 
-    fixedBpm = customBpm;
+    currentStageIndex = STAGES.length - 1; // Usar etapa completa de 4 figuras
     loadNewExercise();
 }
 
 function restartApp() {
     currentStageIndex = 0;
-    fixedBpm = 75;
+    currentBpm = 75;
+    document.getElementById('tempo-label').textContent = currentBpm;
     stats = { total: 0, correct: 0 };
     loadStage();
 }

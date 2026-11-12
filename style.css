@@ -248,8 +248,8 @@ header h1 {
 }
 
 .rhythm-token img, .slot-dropzone img {
-    max-width: 60px;
-    max-height: 70px;
+    max-width: 55px;
+    max-height: 65px;
     object-fit: contain;
 }
 
@@ -325,8 +325,8 @@ header h1 {
 }
 
 .tutorial-item img {
-    width: 55px;
-    height: 65px;
+    width: 50px;
+    height: 60px;
     object-fit: contain;
 }
 
