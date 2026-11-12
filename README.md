@@ -1,25 +1,15 @@
-# Rítmica Visual: Reconocimiento Auditivo Activo
+# Laboratorio de Ritmo Musical (Versión 2)
 
-Aplicación web educativa interactiva desarrollada para estudiantes de Educación Primaria, orientada al reconocimiento auditivo de patrones rítmicos y subdivisiones del pulso mediante asociaciones visuales, onomatopéyicas y sonoras.
+Aplicación web educativa interactiva para estudiantes de Educación Primaria orientada al reconocimiento auditivo de patrones rítmicos y subdivisiones mediante asociaciones visuales y sonoras diferenciadas.
 
-## 🎵 Características Pedagógicas
-- **Progresión Gradual:** 6 etapas que incorporan progresivamente figuras (PAN, QUESO, SILENCIO, MARIPOSA).
-- **Cuenta Previa Sincronizada:** Referencia temporal precisa de 4 pulsos con síntesis de audio nativa.
-- **Retroalimentación Inmediata:** Validación automática de aciertos y errores con opción de corrección.
+## 🎵 Nuevas Características de la Versión 2
+- **Recursos Locales (`assets/`):** Estructura organizada de imágenes transparentes para PAN, QUESO, SILENCIO y MARIPOSA con respaldos integrados.
+- **Sonidos Diferenciados (Web Audio API):** Cuenta previa con tonos sinusoidales limpios y agudos; patrones rítmicos con síntesis percusiva de madera (*woodblock*).
+- **Tempo Fijo Pedagógico (75 BPM):** Velocidad optimizada para el aprendizaje escolar en las etapas principales.
+- **Tutoriales Audiovisuales Interactivos:** Explicaciones con animaciones de pulso y microactividades de comprobación obligatorias.
+- **Desafío de Velocidad Final:** Sección avanzada con opciones de 75, 90 y 105 BPM.
 
-## 🛠️ Tecnologías Utilizadas
-- **HTML5 / CSS3:** Interfaz adaptable y accesible inspirada en sistemas visuales analógicos.
-- **JavaScript (Vanilla):** Lógica interactiva completa, gestión de estados y eventos táctiles/mouse.
-- **Web Audio API:** Síntesis nativa en tiempo real de bloques de madera/claves sin dependencias externas.
-
-## 🚀 Cómo Ejecutar Localmente
-1. Descargá o cloná este repositorio en tu computadora.
-2. Asegurate de tener los cuatro archivos en la misma carpeta (`index.html`, `style.css`, `script.js`, `README.md`).
-3. Hacé doble clic en `index.html` para abrirlo en cualquier navegador web moderno (Chrome, Firefox, Edge, Safari).
-
-## 🌐 Publicación en GitHub Pages
-1. Subí este repositorio a tu cuenta de GitHub.
-2. Ingresá a la pestaña **Settings** (Configuración) de tu repositorio.
-3. Dirigite a **Pages** en el menú lateral izquierdo.
-4. En **Branch**, seleccioná `main` (o `master`) y hacé clic en **Save**.
-5. En pocos segundos, GitHub te proporcionará el enlace web público listo para proyectar en el aula o utilizar desde tablets y teléfonos.
+## 🚀 Cómo Ejecutar y Publicar
+1. Verificá que la carpeta `assets/` contenga las imágenes o utilizá los respaldos automáticos incluidos.
+2. Abrí `index.html` en cualquier navegador moderno.
+3. Para publicar en línea, subí los archivos a un repositorio de GitHub y activá **GitHub Pages** desde la sección de configuración.

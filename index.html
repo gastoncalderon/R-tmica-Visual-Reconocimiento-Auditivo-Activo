@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rítmica Visual - Reconocimiento Auditivo</title>
+    <title>Rítmica Visual - Laboratorio de Ritmo (Versión 2)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
         <!-- Encabezado -->
         <header>
-            <h1>Rítmica Visual</h1>
+            <h1>Laboratorio de Ritmo Musical</h1>
             <div id="stage-info">
                 <span id="stage-title">Cargando etapa...</span>
                 <div id="progress-bar-container">
@@ -19,16 +19,21 @@
             </div>
         </header>
 
-        <!-- Contenedor Principal de Contenidos / Tutoriales o Ejercicios -->
-        <main id="main-content">
-            <!-- Vista dinámica generada por JavaScript según la Etapa -->
+        <!-- Contenedor Principal de Tutoriales y Explicaciones -->
+        <main id="main-content" class="hidden">
+            <div id="tutorial-content"></div>
+            <div id="tutorial-interactive-area" class="hidden">
+                <p id="tutorial-prompt">Escuchá el ejemplo y seleccioná la figura correcta:</p>
+                <div id="tutorial-options" class="tokens-flex"></div>
+                <div id="tutorial-feedback" class="feedback-box hidden"></div>
+            </div>
+            <button id="btn-next-tutorial" class="btn primary hidden">Continuar ➡️</button>
         </main>
 
-        <!-- Panel de Control de Audio y Reproducción -->
+        <!-- Panel de Control de Audio (Tempo fijo a 75 BPM) -->
         <section id="audio-control-panel" class="hidden">
-            <div class="tempo-control">
-                <label for="bpm-slider">Tempo: <span id="bpm-val">80</span> BPM</label>
-                <input type="range" id="bpm-slider" min="60" max="120" value="80">
+            <div class="tempo-fixed-info">
+                <span>Tempo pedagógico: <strong>75 BPM</strong></span>
             </div>
             <div class="action-buttons">
                 <button id="btn-play-count" class="btn primary">🔊 Escuchar Cuenta Previa y Patrón</button>
@@ -42,13 +47,13 @@
             </div>
         </section>
 
-        <!-- Área de Trabajo de Ejercicios (Slots y Banco de Fichas) -->
+        <!-- Área de Trabajo de Ejercicios -->
         <section id="exercise-section" class="hidden">
             <div class="instruction-box">
-                <p id="exercise-instruction">Arrastrá o seleccioná las figuras para completar los 4 pulsos del patrón escuchado:</p>
+                <p id="exercise-instruction">Completá los 4 pulsos del patrón escuchado arrastrando o tocando las figuras:</p>
             </div>
 
-            <!-- Slots de Pulsos (Destino) -->
+            <!-- Slots de Pulsos (Destino) con indicador de iluminación de pulso -->
             <div id="slots-container">
                 <div class="pulse-slot" data-index="0">
                     <div class="slot-number">Pulso 1</div>
@@ -70,9 +75,7 @@
 
             <!-- Banco de Fichas Disponibles -->
             <div class="bank-title">Fichas disponibles:</div>
-            <div id="tokens-bank">
-                <!-- Se poblarán dinámicamente según la etapa activa -->
-            </div>
+            <div id="tokens-bank" class="tokens-flex"></div>
 
             <div class="validation-panel">
                 <button id="btn-check" class="btn success" disabled>✔️ Comprobar Respuestas</button>
@@ -81,22 +84,25 @@
             </div>
         </section>
 
-        <!-- Pantalla de Tutoriales / Explicaciones -->
-        <section id="tutorial-section" class="hidden">
-            <div id="tutorial-content"></div>
-            <button id="btn-finish-tutorial" class="btn primary">¡Entendido, quiero practicar! 🚀</button>
-        </section>
-
-        <!-- Pantalla de Resultados Finales (Etapa 6) -->
+        <!-- Pantalla de Resultados Finales y Desafío de Velocidad -->
         <section id="results-section" class="hidden">
-            <h2>🎉 ¡Felicitaciones! Completaste el recorrido</h2>
+            <h2>🎉 ¡Etapas Superadas con Éxito!</h2>
             <div id="stats-container">
                 <p>Ejercicios resueltos: <span id="stat-total">0</span></p>
-                <p>Aciertos: <span id="stat-correct">0</span></p>
-                <p>Porcentaje de aciertos: <span id="stat-percent">0</span>%</p>
+                <p>Aciertos totales: <span id="stat-correct">0</span></p>
             </div>
-            <div id="recommendations-box"></div>
-            <button id="btn-restart" class="btn primary">Reiniciar Actividad</button>
+            
+            <div class="speed-challenge-box">
+                <h3>🚀 Desafío de Velocidad (Opcional)</h3>
+                <p>Poné a prueba tus habilidades con las 4 figuras a mayor velocidad:</p>
+                <div class="speed-buttons">
+                    <button class="btn speed-btn" data-bpm="75">75 BPM (Normal)</button>
+                    <button class="btn speed-btn" data-bpm="90">90 BPM (Rápido)</button>
+                    <button class="btn speed-btn" data-bpm="105">105 BPM (¡Experto!)</button>
+                </div>
+            </div>
+
+            <button id="btn-restart" class="btn secondary" style="margin-top:15px;">Reiniciar Todo el Laboratorio</button>
         </section>
     </div>
 
