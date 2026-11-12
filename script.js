@@ -83,7 +83,7 @@ let currentExerciseIndex = 0;
 let currentPattern = [];
 let userAnswers = [null, null, null, null];
 let audioCtx = null;
-let currentBpm = 75; // Variable única unificada de tempo para evitar fallos en el desafío
+let currentBpm = 75;
 let stats = { total: 0, correct: 0 };
 let selectedTokenId = null;
 
@@ -148,7 +148,7 @@ function advanceStage() {
 }
 
 // -------------------------------------------------------------
-// TUTORIALES INTERACTIVOS LIMPIOS
+// TUTORIALES INTERACTIVOS
 // -------------------------------------------------------------
 function loadInteractiveTutorial(stage) {
     const mainContent = document.getElementById('main-content');
@@ -284,7 +284,7 @@ function setupTutorialChallenge(allowedFigs, container) {
 }
 
 // -------------------------------------------------------------
-// EJERCICIOS Y SÍNTESIS DE AUDIO ROBUSTA
+// EJERCICIOS Y SÍNTESIS DE AUDIO CORREGIDA
 // -------------------------------------------------------------
 function loadNewExercise() {
     const stage = STAGES[currentStageIndex];
@@ -420,6 +420,8 @@ function playWoodblockAttack(time) {
 
 function playSingleFigureAudio(figKey, bpm) {
     if (!audioCtx) initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
     const now = audioCtx.currentTime + 0.05;
     const beatInterval = 60 / bpm;
     playRhythmPatternForSequence([figKey], now, beatInterval, null);
@@ -461,17 +463,18 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
             highlightPulseSlot(pulseIdx);
         }, Math.max(0, (pulseStart - audioCtx.currentTime) * 1000));
 
-        if (figKey.id === 'pan') {
+        // Corrección clave: ahora evaluamos el string figKey directamente ('pan', 'queso', etc.)
+        if (figKey === 'pan') {
             playWoodblockAttack(pulseStart);
-        } else if (figKey.id === 'queso') {
+        } else if (figKey === 'queso') {
             playWoodblockAttack(pulseStart);
             playWoodblockAttack(pulseStart + (beatInterval / 2));
-        } else if (figKey.id === 'mariposa') {
+        } else if (figKey === 'mariposa') {
             const sub = beatInterval / 4;
             for (let s = 0; s < 4; s++) {
                 playWoodblockAttack(pulseStart + (s * sub));
             }
-        } else if (figKey.id === 'silencio') {
+        } else if (figKey === 'silencio') {
             // Silencio total
         }
     });
@@ -505,7 +508,7 @@ function checkAnswers() {
     stats.total++;
     let isCorrect = true;
     for (let i = 0; i < 4; i++) {
-        if (userAnswers[i] !== currentPattern[i].id) { isCorrect = false; break; }
+        if (userAnswers[i] !== currentPattern[i]) { isCorrect = false; break; }
     }
 
     const feedback = document.getElementById('feedback-message');
@@ -546,14 +549,14 @@ function showResults() {
 }
 
 function startSpeedChallenge(customBpm) {
-    currentBpm = customBpm; // Unificamos el tempo global
+    currentBpm = customBpm;
     document.getElementById('tempo-label').textContent = currentBpm;
     document.getElementById('results-section').classList.add('hidden');
     document.getElementById('audio-control-panel').classList.remove('hidden');
     document.getElementById('exercise-section').classList.remove('hidden');
     document.getElementById('stage-title').textContent = `🚀 Desafío de Velocidad (${currentBpm} BPM)`;
 
-    currentStageIndex = STAGES.length - 1; // Usar etapa completa de 4 figuras
+    currentStageIndex = STAGES.length - 1; 
     loadNewExercise();
 }
 
