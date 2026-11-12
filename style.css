@@ -141,7 +141,6 @@ header h1 {
     font-weight: bold;
     font-size: 1.1rem;
     color: #718096;
-    transition: all 0.1s ease;
 }
 
 .count-box.active {
@@ -193,13 +192,16 @@ header h1 {
     justify-content: center;
     position: relative;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    /* Apagado suave al salir del pulso, sin retrasar el encendido */
+    transition: background 0.15s ease-out, border-color 0.15s ease-out, box-shadow 0.15s ease-out;
 }
 
 .slot-dropzone.pulse-active {
     border-color: var(--accent-color);
     background: #fef5e7;
-    box-shadow: 0 0 10px rgba(230, 126, 34, 0.5);
+    box-shadow: 0 0 12px rgba(230, 126, 34, 0.7);
+    /* Encendido instantáneo (0ms) para caer a tiempo exacto con el tempo */
+    transition: none !important;
 }
 
 .slot-dropzone.drag-over {
@@ -356,17 +358,17 @@ header h1 {
 /* ========================================================= */
 @media (max-width: 600px) {
   #app {
-    padding: 12px 6px; /* Reduce márgenes laterales de la app */
+    padding: 12px 6px;
   }
 
   #slots-container {
-    gap: 5px; /* Reduce el espacio entre los 4 slots */
-    flex-wrap: nowrap; /* Fuerza a que no salten de línea */
+    gap: 5px;
+    flex-wrap: nowrap;
     width: 100%;
   }
 
   .slot-dropzone {
-    width: 21vw; /* Ancho fluido adaptado a celulares */
+    width: 21vw;
     max-width: 72px;
     height: 90px;
     border-width: 2px;
@@ -378,6 +380,6 @@ header h1 {
   }
 
   .slot-number {
-    font-size: 0.68rem; /* Texto más compacto */
+    font-size: 0.68rem;
   }
 }

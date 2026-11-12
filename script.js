@@ -1,5 +1,5 @@
 /**
- * Rítmica Visual - Laboratorio de Ritmo (Versión optimizada con sincronización r.a.f.)
+ * Rítmica Visual - Laboratorio de Ritmo (Reloj Maestro de Tempo)
  */
 
 const FIGURES = {
@@ -154,6 +154,9 @@ function advanceStage() {
     }
 }
 
+// -------------------------------------------------------------
+// TUTORIALES INTERACTIVOS
+// -------------------------------------------------------------
 function createSafeImage(figKey, altText) {
     const fig = FIGURES[figKey];
     const img = document.createElement('img');
@@ -310,6 +313,9 @@ function setupTutorialChallenge(allowedFigs, container) {
     document.getElementById('tutorial-interactive-area').classList.remove('hidden');
 }
 
+// -------------------------------------------------------------
+// EJERCICIOS Y RELOJ MAESTRO DE TEMPO
+// -------------------------------------------------------------
 function loadNewExercise() {
     const stage = STAGES[currentStageIndex];
     userAnswers = [null, null, null, null];
@@ -393,6 +399,7 @@ function placeTokenInSlot(slotIdx, figId) {
 function resetSlotsUI() {
     document.querySelectorAll('.slot-dropzone').forEach(zone => {
         zone.innerHTML = '';
+        zone.classList.remove('pulse-active');
     });
 }
 
@@ -402,9 +409,6 @@ function checkCompletionStatus() {
 }
 
 function playSinusoidalBeep(time, isAccent = false) {
-    if (!audioCtx) initAudio();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
@@ -422,9 +426,6 @@ function playSinusoidalBeep(time, isAccent = false) {
 }
 
 function playWoodblockAttack(time) {
-    if (!audioCtx) initAudio();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
@@ -442,44 +443,62 @@ function playWoodblockAttack(time) {
     osc.stop(time + 0.05);
 }
 
-function playSingleFigureAudio(figKey, bpm) {
+async function playSingleFigureAudio(figKey, bpm) {
     if (!audioCtx) initAudio();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-    const now = audioCtx.currentTime + 0.05;
+    const startTime = audioCtx.currentTime + 0.04;
     const beatInterval = 60 / bpm;
-    playRhythmPatternForSequence([figKey], now, beatInterval, null);
+    schedulePatternAudio([figKey], startTime, beatInterval);
 }
 
-function playCountAndPattern(bpm) {
+async function playCountAndPattern(bpm) {
     if (!audioCtx) initAudio();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-    const now = audioCtx.currentTime + 0.05;
+    const startTime = audioCtx.currentTime + 0.06;
     const beatInterval = 60 / bpm;
 
+    // 1. Programar los 4 pulsos de cuenta previa (1, 2, 3, 4)
     for (let i = 0; i < 4; i++) {
-        const beatTime = now + (i * beatInterval);
-        playSinusoidalBeep(beatTime, i === 0);
-        setTimeout(() => highlightCountBox(i + 1, bpm), (beatTime - now) * 1000);
+        playSinusoidalBeep(startTime + (i * beatInterval), i === 0);
     }
 
-    const patternStartTime = now + (4 * beatInterval);
-    playRhythmPatternForSequence(currentPattern, patternStartTime, beatInterval, () => {
-        document.getElementById('btn-replay').disabled = false;
+    // 2. Programar los 4 pulsos del patrón rítmico
+    const patternStartTime = startTime + (4 * beatInterval);
+    schedulePatternAudio(currentPattern, patternStartTime, beatInterval);
+
+    // 3. Arrancar el reloj maestro de tempo (cuenta + patrón)
+    runMasterTempoClock({
+        startTime,
+        beatInterval,
+        includeCount: true,
+        patternLength: currentPattern.length,
+        onComplete: () => {
+            document.getElementById('btn-replay').disabled = false;
+        }
     });
 }
 
-function playPatternOnly(bpm) {
+async function playPatternOnly(bpm) {
     if (!audioCtx) initAudio();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-    const now = audioCtx.currentTime + 0.05;
+    const startTime = audioCtx.currentTime + 0.06;
     const beatInterval = 60 / bpm;
-    playRhythmPatternForSequence(currentPattern, now, beatInterval, null);
+
+    schedulePatternAudio(currentPattern, startTime, beatInterval);
+
+    runMasterTempoClock({
+        startTime,
+        beatInterval,
+        includeCount: false,
+        patternLength: currentPattern.length,
+        onComplete: null
+    });
 }
 
-function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComplete) {
+function schedulePatternAudio(pattern, startTime, beatInterval) {
     pattern.forEach((figKey, pulseIdx) => {
         const pulseStart = startTime + (pulseIdx * beatInterval);
 
@@ -493,56 +512,65 @@ function playRhythmPatternForSequence(pattern, startTime, beatInterval, onComple
             for (let s = 0; s < 4; s++) {
                 playWoodblockAttack(pulseStart + (s * sub));
             }
-        } else if (figKey === 'silencio') {
-            // Silencio total
         }
     });
-
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    let highlighted = new Array(pattern.length).fill(false);
-
-    function updateVisuals() {
-        if (!audioCtx) return;
-        const now = audioCtx.currentTime;
-
-        pattern.forEach((_, pulseIdx) => {
-            const pulseStart = startTime + (pulseIdx * beatInterval);
-            if (!highlighted[pulseIdx] && now >= pulseStart) {
-                highlighted[pulseIdx] = true;
-                highlightPulseSlot(pulseIdx);
-            }
-        });
-
-        const totalDuration = pattern.length * beatInterval;
-        if (now < startTime + totalDuration + 0.1) {
-            animationFrameId = requestAnimationFrame(updateVisuals);
-        }
-    }
-
-    animationFrameId = requestAnimationFrame(updateVisuals);
-
-    if (onComplete) {
-        const totalDuration = (pattern.length * beatInterval * 1000);
-        setTimeout(onComplete, totalDuration + 100);
-    }
 }
 
-function highlightCountBox(num, bpm) {
+function runMasterTempoClock({ startTime, beatInterval, includeCount, patternLength, onComplete }) {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+    const totalBeats = (includeCount ? 4 : 0) + patternLength;
+    let lastTriggeredBeat = -1;
+
+    function tick() {
+        const elapsed = audioCtx.currentTime - startTime;
+
+        if (elapsed >= 0) {
+            const currentBeat = Math.floor(elapsed / beatInterval);
+
+            if (currentBeat > lastTriggeredBeat && currentBeat < totalBeats) {
+                lastTriggeredBeat = currentBeat;
+
+                if (includeCount && currentBeat < 4) {
+                    highlightCountBox(currentBeat + 1);
+                } else {
+                    document.getElementById('count-visualizer').classList.add('hidden');
+                    const slotIdx = includeCount ? currentBeat - 4 : currentBeat;
+                    highlightPulseSlot(slotIdx, beatInterval);
+                }
+            }
+
+            if (elapsed >= totalBeats * beatInterval) {
+                document.querySelectorAll('.slot-dropzone').forEach(z => z.classList.remove('pulse-active'));
+                document.getElementById('count-visualizer').classList.add('hidden');
+                if (onComplete) onComplete();
+                return;
+            }
+        }
+
+        animationFrameId = requestAnimationFrame(tick);
+    }
+
+    animationFrameId = requestAnimationFrame(tick);
+}
+
+function highlightCountBox(num) {
     const container = document.getElementById('count-visualizer');
     container.classList.remove('hidden');
     document.querySelectorAll('.count-box').forEach(box => box.classList.remove('active'));
-    document.getElementById(`c-${num}`).classList.add('active');
-
-    if (num === 4) {
-        setTimeout(() => container.classList.add('hidden'), (60 / bpm) * 1000);
-    }
+    const box = document.getElementById(`c-${num}`);
+    if (box) box.classList.add('active');
 }
 
-function highlightPulseSlot(idx) {
+function highlightPulseSlot(idx, beatInterval) {
     const zones = document.querySelectorAll('.slot-dropzone');
+    zones.forEach(z => z.classList.remove('pulse-active'));
+
     if (zones[idx]) {
         zones[idx].classList.add('pulse-active');
-        setTimeout(() => zones[idx].classList.remove('pulse-active'), 300);
+        setTimeout(() => {
+            if (zones[idx]) zones[idx].classList.remove('pulse-active');
+        }, beatInterval * 700);
     }
 }
 
